@@ -46,6 +46,16 @@ class AffiliateMarketing:
         # Initialize the Firefox profile
         self.options: Options = Options()
 
+        # Disable Firefox telemetry to prevent data leakage to Mozilla
+        self.options.set_preference("toolkit.telemetry.enabled", False)
+        self.options.set_preference("toolkit.telemetry.unified", False)
+        self.options.set_preference("toolkit.telemetry.archive.enabled", False)
+        self.options.set_preference("datareporting.healthreport.uploadEnabled", False)
+        self.options.set_preference("datareporting.policy.dataSubmissionEnabled", False)
+        self.options.set_preference("app.shield.optoutstudies.enabled", False)
+        self.options.set_preference("browser.newtabpage.activity-stream.feeds.telemetry", False)
+        self.options.set_preference("browser.ping-centre.telemetry", False)
+
         # Set headless state of browser
         if get_headless():
             self.options.add_argument("--headless")

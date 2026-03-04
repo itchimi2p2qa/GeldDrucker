@@ -188,7 +188,8 @@ class Outreach:
             email = email_addresses[0] if len(email_addresses) > 0 else ""
 
         if email:
-            print(f"=> Setting email {email} for website {website}")
+            if get_verbose():
+                info(f"=> Found contact email for {website}")
             with open(output_file, "r", newline="", errors="ignore") as csvfile:
                 csvreader = csv.reader(csvfile)
                 items = list(csvreader)
@@ -279,7 +280,7 @@ class Outreach:
                         with open(message_body, "r") as _f:
                             body = _f.read().replace("{{COMPANY_NAME}}", company_name)
 
-                        info(f" => Sending email to {receiver_email}...")
+                        info(f" => Sending email to {company_name}...")
 
                         yag.send(
                             to=receiver_email,
@@ -287,7 +288,7 @@ class Outreach:
                             contents=body,
                         )
 
-                        success(f" => Sent email to {receiver_email}")
+                        success(f" => Sent email to {company_name}")
                     else:
                         warning(f" => Website {website} is invalid. Skipping...")
             except Exception as err:

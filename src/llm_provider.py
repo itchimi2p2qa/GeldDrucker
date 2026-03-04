@@ -1,12 +1,30 @@
+import warnings
+import urllib.parse
+
 import ollama
 
 from config import get_ollama_base_url
 
 _selected_model: str | None = None
+_warned_http: bool = False
 
 
 def _client() -> ollama.Client:
-    return ollama.Client(host=get_ollama_base_url())
+    global _warned_http
+    url = get_ollama_base_url()
+    parsed = urllib.parse.urlparse(url)
+    if (
+        not _warned_http
+        and parsed.scheme == "http"
+        and parsed.hostname not in ("127.0.0.1", "localhost", "::1")
+    ):
+        _warned_http = True
+        warnings.warn(
+            f"Ollama URL '{url}' uses unencrypted HTTP to a non-localhost host. "
+            "LLM prompts will be transmitted in cleartext. Use HTTPS for remote servers.",
+            stacklevel=2,
+        )
+    return ollama.Client(host=url)
 
 
 def list_models() -> list[str]:

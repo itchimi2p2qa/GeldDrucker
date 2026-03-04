@@ -29,11 +29,17 @@ def assert_folder_structure() -> None:
     Returns:
         None
     """
-    # Create the .mp folder
-    if not os.path.exists(os.path.join(ROOT_DIR, ".mp")):
+    # Create the .mp folder with restricted permissions (owner-only)
+    mp_dir = os.path.join(ROOT_DIR, ".mp")
+    if not os.path.exists(mp_dir):
         if get_verbose():
-            print(colored(f"=> Creating .mp folder at {os.path.join(ROOT_DIR, '.mp')}", "green"))
-        os.makedirs(os.path.join(ROOT_DIR, ".mp"))
+            print(colored(f"=> Creating .mp folder at {mp_dir}", "green"))
+        os.makedirs(mp_dir, mode=0o700)
+    else:
+        try:
+            os.chmod(mp_dir, 0o700)
+        except OSError:
+            pass  # Best-effort on systems that don't support chmod
 
     # Restrict config.json permissions (owner read/write only)
     config_path = os.path.join(ROOT_DIR, "config.json")

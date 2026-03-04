@@ -54,6 +54,16 @@ class Twitter:
         # Initialize the Firefox profile
         self.options: Options = Options()
 
+        # Disable Firefox telemetry to prevent data leakage to Mozilla
+        self.options.set_preference("toolkit.telemetry.enabled", False)
+        self.options.set_preference("toolkit.telemetry.unified", False)
+        self.options.set_preference("toolkit.telemetry.archive.enabled", False)
+        self.options.set_preference("datareporting.healthreport.uploadEnabled", False)
+        self.options.set_preference("datareporting.policy.dataSubmissionEnabled", False)
+        self.options.set_preference("app.shield.optoutstudies.enabled", False)
+        self.options.set_preference("browser.newtabpage.activity-stream.feeds.telemetry", False)
+        self.options.set_preference("browser.ping-centre.telemetry", False)
+
         # Set headless state of browser
         if get_headless():
             self.options.add_argument("--headless")
@@ -94,7 +104,8 @@ class Twitter:
         post_content: str = text if text is not None else self.generate_post()
         now: datetime = datetime.now()
 
-        print(colored(" => Posting to Twitter:", "blue"), post_content[:30] + "...")
+        if verbose:
+            info(" => Posting to Twitter...")
         body = post_content
 
         text_box = None

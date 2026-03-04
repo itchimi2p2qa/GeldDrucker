@@ -85,6 +85,16 @@ class YouTube:
         # Initialize the Firefox profile
         self.options: Options = Options()
 
+        # Disable Firefox telemetry to prevent data leakage to Mozilla
+        self.options.set_preference("toolkit.telemetry.enabled", False)
+        self.options.set_preference("toolkit.telemetry.unified", False)
+        self.options.set_preference("toolkit.telemetry.archive.enabled", False)
+        self.options.set_preference("datareporting.healthreport.uploadEnabled", False)
+        self.options.set_preference("datareporting.policy.dataSubmissionEnabled", False)
+        self.options.set_preference("app.shield.optoutstudies.enabled", False)
+        self.options.set_preference("browser.newtabpage.activity-stream.feeds.telemetry", False)
+        self.options.set_preference("browser.ping-centre.telemetry", False)
+
         # Set headless state of browser
         if get_headless():
             self.options.add_argument("--headless")
@@ -280,7 +290,7 @@ class YouTube:
             try:
                 image_prompts = json.loads(completion)
                 if get_verbose():
-                    info(f" => Generated Image Prompts: {image_prompts}")
+                    info(f" => Generated {len(image_prompts)} image prompts.")
             except Exception:
                 if get_verbose():
                     warning(
@@ -338,7 +348,8 @@ class YouTube:
         Returns:
             path (str): The path to the generated image.
         """
-        print(f"Generating Image using Nano Banana 2 API: {prompt}")
+        if get_verbose():
+            info("Generating image using Nano Banana 2 API...")
 
         api_key = get_nanobanana2_api_key()
         if not api_key:
@@ -484,6 +495,8 @@ class YouTube:
         Returns:
             path (str): Path to SRT file
         """
+        if get_verbose():
+            warning("Audio will be uploaded to AssemblyAI (third-party) for transcription.")
         aai.settings.api_key = get_assemblyai_api_key()
         config = aai.TranscriptionConfig()
         transcriber = aai.Transcriber(config=config)

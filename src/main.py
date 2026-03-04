@@ -81,7 +81,7 @@ def main():
                 fp_profile = question(" => Enter the path to the Firefox profile: ")
 
                 if not os.path.isdir(fp_profile):
-                    error(f"Firefox profile path does not exist or is not a directory: {fp_profile}")
+                    error("Firefox profile path does not exist or is not a directory.")
                     return
 
                 niche = question(" => Enter the account niche: ")
@@ -235,7 +235,7 @@ def main():
                 fp_profile = question(" => Enter the path to the Firefox profile: ")
 
                 if not os.path.isdir(fp_profile):
-                    error(f"Firefox profile path does not exist or is not a directory: {fp_profile}")
+                    error("Firefox profile path does not exist or is not a directory.")
                     return
 
                 topic = question(" => Enter the account topic: ")
