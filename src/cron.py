@@ -1,4 +1,5 @@
 # RUN THIS N AMOUNT OF TIMES
+import re
 import sys
 
 from status import *
@@ -30,6 +31,14 @@ def main():
     purpose = str(sys.argv[1])
     account_id = str(sys.argv[2])
     model = str(sys.argv[3]) if len(sys.argv) > 3 else None
+
+    if purpose not in ("twitter", "youtube"):
+        error(f"Invalid purpose: {purpose}. Must be 'twitter' or 'youtube'.")
+        sys.exit(1)
+
+    if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', account_id):
+        error(f"Invalid account ID format: {account_id}. Expected UUID.")
+        sys.exit(1)
 
     if model:
         select_model(model)

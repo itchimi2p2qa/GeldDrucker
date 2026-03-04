@@ -15,15 +15,15 @@ youtube_ids=$($PYTHON -c "import json; print('\n'.join([account['id'] for accoun
 echo "What account do you want to upload the video to?"
 
 # Print the ids
-for id in $youtube_ids; do
-  echo $id
-done
+while IFS= read -r id; do
+  echo "$id"
+done <<< "$youtube_ids"
 
 # Ask for the id
 read -p "Enter the id: " id
 
 # Check if the id is in the list
-if [[ " ${youtube_ids[@]} " =~ " ${id} " ]]; then
+if echo "$youtube_ids" | grep -qxF "$id"; then
   echo "ID found"
 else
   echo "ID not found"
@@ -31,4 +31,4 @@ else
 fi
 
 # Run python script
-$PYTHON src/cron.py youtube $id
+"$PYTHON" src/cron.py youtube "$id"

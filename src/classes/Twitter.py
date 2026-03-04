@@ -21,6 +21,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+def _sanitize_prompt_input(value: str) -> str:
+    """Strip control characters and limit length to mitigate prompt injection."""
+    sanitized = re.sub(r'[\x00-\x1f\x7f]', '', value)
+    return sanitized[:500]
+
+
 class Twitter:
     """
     Class for the Bot, that grows a Twitter account.
@@ -203,7 +209,7 @@ class Twitter:
             post (str): The post
         """
         completion = generate_text(
-            f"Generate a Twitter post about: {self.topic} in {get_twitter_language()}. "
+            f"Generate a Twitter post about: {_sanitize_prompt_input(self.topic)} in {_sanitize_prompt_input(get_twitter_language())}. "
             "The Limit is 2 sentences. Choose a specific sub-topic of the provided topic."
         )
 

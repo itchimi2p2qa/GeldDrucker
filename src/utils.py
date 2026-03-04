@@ -3,6 +3,7 @@ import random
 import zipfile
 import requests
 import platform
+import subprocess
 
 from status import *
 from config import *
@@ -22,9 +23,9 @@ def close_running_selenium_instances() -> None:
 
         # Kill all running Firefox instances
         if platform.system() == "Windows":
-            os.system("taskkill /f /im firefox.exe")
+            subprocess.run(["taskkill", "/f", "/im", "firefox.exe"], check=False)
         else:
-            os.system("pkill firefox")
+            subprocess.run(["pkill", "firefox"], check=False)
 
         success(" => Closed running Selenium instances.")
 
@@ -104,13 +105,15 @@ def fetch_songs() -> None:
 
                 SAFE_EXTENSIONS = (".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac")
                 with zipfile.ZipFile(archive_path, "r") as zf:
+                    target_dir = os.path.realpath(files_dir)
                     for member in zf.namelist():
                         basename = os.path.basename(member)
                         if not basename or not basename.lower().endswith(SAFE_EXTENSIONS):
                             warning(f"Skipping non-audio file in archive: {member}")
                             continue
-                        if ".." in member or member.startswith("/"):
-                            warning(f"Skipping suspicious path in archive: {member}")
+                        member_path = os.path.realpath(os.path.join(target_dir, member))
+                        if not member_path.startswith(target_dir + os.sep):
+                            warning(f"Skipping path traversal attempt in archive: {member}")
                             continue
                         zf.extract(member, files_dir)
 

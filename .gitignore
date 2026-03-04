@@ -3,8 +3,14 @@ config.json
 .mp/
 venv/
 Songs/
-google-maps-scraper-0.9.7/
+google-maps-scraper-*/
 niche.txt
 *.exe
 auto.sh
 .DS_Store
+*.env
+.env*
+*.pem
+*.key
+credentials.json
+google-maps-scraper

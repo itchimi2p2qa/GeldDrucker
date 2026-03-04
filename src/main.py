@@ -79,6 +79,11 @@ def main():
                 success(f" => Generated ID: {generated_uuid}")
                 nickname = question(" => Enter a nickname for this account: ")
                 fp_profile = question(" => Enter the path to the Firefox profile: ")
+
+                if not os.path.isdir(fp_profile):
+                    error(f"Firefox profile path does not exist or is not a directory: {fp_profile}")
+                    return
+
                 niche = question(" => Enter the account niche: ")
                 language = question(" => Enter the account language: ")
 
@@ -228,6 +233,11 @@ def main():
                 success(f" => Generated ID: {generated_uuid}")
                 nickname = question(" => Enter a nickname for this account: ")
                 fp_profile = question(" => Enter the path to the Firefox profile: ")
+
+                if not os.path.isdir(fp_profile):
+                    error(f"Firefox profile path does not exist or is not a directory: {fp_profile}")
+                    return
+
                 topic = question(" => Enter the account topic: ")
 
                 add_account("twitter", {

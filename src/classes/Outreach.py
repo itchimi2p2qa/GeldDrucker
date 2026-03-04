@@ -74,11 +74,13 @@ class Outreach:
             info("=> Scraper already unzipped. Skipping unzip.")
             return
 
-        r = requests.get(zip_link)
+        r = requests.get(zip_link, timeout=60)
         z = zipfile.ZipFile(io.BytesIO(r.content))
+        target_dir = os.path.realpath(os.getcwd())
         for member in z.namelist():
-            if ".." in member or member.startswith("/"):
-                warning(f"Skipping suspicious path in archive: {member}")
+            member_path = os.path.realpath(os.path.join(target_dir, member))
+            if not member_path.startswith(target_dir + os.sep):
+                warning(f"Skipping path traversal attempt in archive: {member}")
                 continue
             z.extract(member)
 
@@ -175,7 +177,7 @@ class Outreach:
         # Extract and set an email for a website
         email = ""
 
-        r = requests.get(website)
+        r = requests.get(website, timeout=15)
         if r.status_code == 200:
             # Define a regular expression pattern to match email addresses
             email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b"
@@ -259,7 +261,7 @@ class Outreach:
                 website = [w for w in website if w.startswith("http")]
                 website = website[0] if len(website) > 0 else ""
                 if website != "":
-                    test_r = requests.get(website)
+                    test_r = requests.get(website, timeout=15)
                     if test_r.status_code == 200:
                         self.set_email_for_website(index, website, output_path)
 
@@ -274,11 +276,8 @@ class Outreach:
                         subject = message_subject.replace(
                             "{{COMPANY_NAME}}", company_name
                         )
-                        body = (
-                            open(message_body, "r")
-                            .read()
-                            .replace("{{COMPANY_NAME}}", company_name)
-                        )
+                        with open(message_body, "r") as _f:
+                            body = _f.read().replace("{{COMPANY_NAME}}", company_name)
 
                         info(f" => Sending email to {receiver_email}...")
 

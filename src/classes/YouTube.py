@@ -32,6 +32,12 @@ from datetime import datetime
 change_settings({"IMAGEMAGICK_BINARY": get_imagemagick_path()})
 
 
+def _sanitize_prompt_input(value: str) -> str:
+    """Strip control characters and limit length to mitigate prompt injection."""
+    sanitized = re.sub(r'[\x00-\x1f\x7f]', '', value)
+    return sanitized[:500]
+
+
 class YouTube:
     """
     Class for YouTube Automation.
@@ -139,7 +145,7 @@ class YouTube:
             topic (str): The generated topic.
         """
         completion = self.generate_response(
-            f"Please generate a specific video idea that takes about the following topic: {self.niche}. Make it exactly one sentence. Only return the topic, nothing else."
+            f"Please generate a specific video idea that takes about the following topic: {_sanitize_prompt_input(self.niche)}. Make it exactly one sentence. Only return the topic, nothing else."
         )
 
         if not completion:
@@ -149,7 +155,7 @@ class YouTube:
 
         return completion
 
-    def generate_script(self) -> str:
+    def generate_script(self, _retry: int = 0) -> str:
         """
         Generate a script for a video, depending on the subject of the video, the number of paragraphs, and the AI model.
 
@@ -176,8 +182,8 @@ class YouTube:
         YOU MUST WRITE THE SCRIPT IN THE LANGUAGE SPECIFIED IN [LANGUAGE].
         ONLY RETURN THE RAW CONTENT OF THE SCRIPT. DO NOT INCLUDE "VOICEOVER", "NARRATOR" OR SIMILAR INDICATORS OF WHAT SHOULD BE SPOKEN AT THE BEGINNING OF EACH PARAGRAPH OR LINE. YOU MUST NOT MENTION THE PROMPT, OR ANYTHING ABOUT THE SCRIPT ITSELF. ALSO, NEVER TALK ABOUT THE AMOUNT OF PARAGRAPHS OR LINES. JUST WRITE THE SCRIPT
         
-        Subject: {self.subject}
-        Language: {self.language}
+        Subject: {_sanitize_prompt_input(self.subject)}
+        Language: {_sanitize_prompt_input(self.language)}
         """
         completion = self.generate_response(prompt)
 
@@ -189,15 +195,17 @@ class YouTube:
             return
 
         if len(completion) > 5000:
+            if _retry >= 3:
+                raise RuntimeError("Failed to generate a script within length limit after 3 retries.")
             if get_verbose():
                 warning("Generated Script is too long. Retrying...")
-            return self.generate_script()
+            return self.generate_script(_retry=_retry + 1)
 
         self.script = completion
 
         return completion
 
-    def generate_metadata(self) -> dict:
+    def generate_metadata(self, _retry: int = 0) -> dict:
         """
         Generates Video metadata for the to-be-uploaded YouTube Short (Title, Description).
 
@@ -205,13 +213,15 @@ class YouTube:
             metadata (dict): The generated metadata.
         """
         title = self.generate_response(
-            f"Please generate a YouTube Video Title for the following subject, including hashtags: {self.subject}. Only return the title, nothing else. Limit the title under 100 characters."
+            f"Please generate a YouTube Video Title for the following subject, including hashtags: {_sanitize_prompt_input(self.subject)}. Only return the title, nothing else. Limit the title under 100 characters."
         )
 
         if len(title) > 100:
+            if _retry >= 3:
+                raise RuntimeError("Failed to generate a title within length limit after 3 retries.")
             if get_verbose():
                 warning("Generated Title is too long. Retrying...")
-            return self.generate_metadata()
+            return self.generate_metadata(_retry=_retry + 1)
 
         description = self.generate_response(
             f"Please generate a YouTube Video Description for the following script: {self.script}. Only return the description, nothing else."
@@ -221,7 +231,7 @@ class YouTube:
 
         return self.metadata
 
-    def generate_prompts(self) -> List[str]:
+    def generate_prompts(self, _retry: int = 0) -> List[str]:
         """
         Generates AI Image Prompts based on the provided Video Script.
 
@@ -233,7 +243,7 @@ class YouTube:
         prompt = f"""
         Generate {n_prompts} Image Prompts for AI Image Generation,
         depending on the subject of a video.
-        Subject: {self.subject}
+        Subject: {_sanitize_prompt_input(self.subject)}
 
         The image prompts are to be returned as
         a JSON-Array of strings.
@@ -281,9 +291,11 @@ class YouTube:
                 r = re.compile(r"\[.*\]")
                 image_prompts = r.findall(completion)
                 if len(image_prompts) == 0:
+                    if _retry >= 3:
+                        raise RuntimeError("Failed to generate image prompts after 3 retries.")
                     if get_verbose():
                         warning("Failed to generate Image Prompts. Retrying...")
-                    return self.generate_prompts()
+                    return self.generate_prompts(_retry=_retry + 1)
 
         if len(image_prompts) > n_prompts:
             image_prompts = image_prompts[: int(n_prompts)]
@@ -370,7 +382,7 @@ class YouTube:
                         return self._persist_image(image_bytes, "Nano Banana 2 API")
 
             if get_verbose():
-                warning(f"Nano Banana 2 did not return an image payload. Response: {body}")
+                warning("Nano Banana 2 did not return an image payload. Check API configuration.")
             return None
         except Exception as e:
             if get_verbose():
@@ -848,7 +860,7 @@ class YouTube:
             driver.quit()
 
             return True
-        except:
+        except Exception:
             self.browser.quit()
             return False
 
