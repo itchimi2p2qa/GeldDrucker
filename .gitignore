@@ -14,3 +14,4 @@ auto.sh
 *.key
 credentials.json
 google-maps-scraper
+firefox-profile/

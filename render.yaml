@@ -1,0 +1,45 @@
+services:
+  # Background worker — runs cron.py for YouTube or Twitter automation
+  - type: worker
+    name: geldducker-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python src/cron.py youtube $ACCOUNT_UUID $OLLAMA_MODEL
+    envVars:
+      - key: ACCOUNT_UUID
+        sync: false
+      - key: OLLAMA_MODEL
+        sync: false
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FIREFOX_PROFILE
+        value: /app/firefox-profile
+    disk:
+      name: geldducker-data
+      mountPath: /app/.mp
+      sizeGB: 1
+
+  # Scheduled daily YouTube upload (runs at 10:00 UTC)
+  - type: cron
+    name: daily-youtube-upload
+    schedule: "0 10 * * *"
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python src/cron.py youtube $ACCOUNT_UUID $OLLAMA_MODEL
+    envVars:
+      - key: ACCOUNT_UUID
+        sync: false
+      - key: OLLAMA_MODEL
+        sync: false
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FIREFOX_PROFILE
+        value: /app/firefox-profile
+    disk:
+      name: geldducker-data
+      mountPath: /app/.mp
+      sizeGB: 1
